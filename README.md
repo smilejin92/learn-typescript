@@ -618,3 +618,151 @@ stringOrNumber(/* ... */); // string | number
 
 &nbsp;  
 
+#### 3.1.8. 배열
+
+* `T[]` 혹은 `Array<T>` 문법을 사용하여 작성한다.
+* 보통 배열은 동형(homogeneous)으로 만든다. 그렇지 않으면 타입스크립트에 배열과 관련한 작업이 안전한지 증명해야 하므로 추가 작업을 해야한다.
+* 배열을 선언하고 특정 타입의 값을 추가했을 때, 타입스크립트는 이미 이 배열이 특정 타입의 값을 갖는 배열이라 추론한다.
+  * 배열이 초기화된 이후에 해당 배열에서 취급하지 않는 타입의 값을 추가하려하면 에러가 발생한다.
+
+```typescript
+let a = [1, 2, 3]; // number[]
+var b = ['a', 'b']; // strin[]
+let c: string[] = ['a'];
+let d = [1, 'a']; // (number | string)[]
+const e = [2, 'b']; // (number | string)[]
+
+let f = ['red'];
+f.push('blue');
+f.push(true); // 에러: true 타입 인수를 number 타입 매개변수에 할당할 수 없음
+
+let g = []; // any[]
+g.push(1); // number[]
+g.push('red'); // (string | number)[]
+```
+
+&nbsp;  
+
+* 2개 이상의 타입을 포함하는 배열을 대상으로 `map` 같은 배열 메소드를 사용할 때, 각 요소의 타입에 맞는 동작을 수행해야한다. (`typeof` 연산자 사용)
+
+```typescript
+let d = [1, 'a'];
+d.map(elem => {
+  if (typeof elem === 'number') {
+    return elem * 3;
+  }
+  return elem.toUpperCase();
+})
+```
+
+&nbsp;  
+
+* 객체와 마찬가지로 배열을 `const` 키워드로 만들어도 타입스크립트는 타입을 더 좁게 추론하지 않는다.
+
+```typescript
+const e = [2, 'b']; // (number | string)[]
+```
+
+
+
+* 빈 배열로 초기화하면 타입스크립트는 배열의 요소 타입을 알 수 없으므로 `any[]`일 것으로 추론한다.
+
+```typescript
+let g = []; // any[]
+```
+
+&nbsp;  
+
+* 배열이 정의된 영역을 벗어나면 타입스크립트는 배열을 더 이상 확장할 수 없도록 최종 타입을 할당한다.
+
+```typescript
+function buildArray() {
+  let a = []; // any[]
+  a.push(1); // number[]
+  a.push('x'); // (number | string)[]
+  return a;
+}
+
+let myArray = buildArray(); // (number | string)[]
+myArray.push(true); // 에러: 'true' 타입의 인수는 'string | number' 타입의 매개변수에 할당할 수 없음
+```
+
+&nbsp;  
+
+#### 3.1.9. 튜플
+
+* 배열의 서브타입
+* 길이가 고정되어있고, 각 인텍스의 타입이 알려진 배열의 일종이다.
+* 다른 타입과 달리 튜플은 선언할 때 타입을 명시해야 한다.
+  * 타입스크립트에서는 대괄호(`[]`)를 배열 타입으로 추론하기 때문이다.
+* 튜플은 이형 배열을 안전하게 관리할 뿐 아니라, 배열 타입의 길이도 조절한다.
+
+```typescript
+let a: [number] = [1];
+
+// [이름, 성씨, 생년]
+let b: [string, string, number] = ['Jin', 'Kim', 1900];
+b = ['Queen', 'Elizabeth', 'ii', 1929]; // 에러: 'string'은 'number' 타입에 할당할 수 없음
+```
+
+&nbsp;  
+
+* 튜플은 선택형 요소도 지원한다. 객체 타입에서와 마찬가지로 `?`는 '선택형'을 뜻한다.
+
+```typescript
+// 방향에 따라 다른 값을 갖는 기차 요금 배열
+let trainFares: [number, number?][] = [[3.75], [8.25, 7.7], [10.5]];
+
+// 아래 방법으로 작성할 수 있다.
+let moreTrainFares: ([number] | [number, number])[] = [
+  // ...
+];
+```
+
+&nbsp;  
+
+* 튜플이 최소 길이를 갖도록 지정할 때는 나머지 요소(`...`)를 사용할 수 있다.
+
+```typescript
+// 최소 한 개의 요소를 갖는 string 배열
+let friends: [string, ...string[]] = ['Sara', 'Tali', 'Chloe', 'Claire'];
+
+// 이형 배열
+let list: [number, boolean, ...string[]] = [1, false, 'a', 'b', 'c'];
+```
+
+&nbsp;  
+
+#### 3.1.10. 읽기 전용 배열과 튜플
+
+* 일반 배열은 가변적이다 (mutable - `push`, `splice`, 갱신 등의 작업이 가능하다).
+* 상황에 따라 불변인 배열이 필요할 수 있다 (immutable - 배열 초기화 후 내용을 바꿀 수 없는)
+* 타입스크립트의 `readonly` 배열 타입을 사용하여 불변 배열을 만들 수 있다. 이때 명시적으로 타입을 작성한다.
+* 읽기 전용 배열을 갱신하려면 `push`, `splice`와 같은 mutator를 사용하지 않고, `concat`, `slice` 메소드 등을 사용하여 새로운 배열을 생성한다.
+* 읽기 전용 배열 수정하기 위해서는 원래 배열을 복사해야 하므로, 주의하지 않으면 프로그램의 성능이 느려질 수 있다.
+
+```typescript
+// 읽기 전용 배열
+let as: readonly number[] = [1, 2, 3]; // readonly number[]
+let bs: readonly number = as.concat(4); // readonly number[]
+
+let three = bs[2]; // number
+as[4] = 5; // 에러: 'readonly number[]'의 인덱스 시그니처 타입은 읽기만 허용함
+as.push(6); // 에러: 'push' 프로퍼티는 'readonly number[]' 타입에 존재하지 않음
+```
+
+&nbsp;  
+
+* 다양한 형태로 읽기 전용 배열과 튜플 타입을 선언할 수 있다.
+
+```typescript
+type A = readonly string[]; // readonly string[]
+type B = ReadonlyArray<string>; // readonly string[]
+type C = Readonly<string[]>; // readonly string[]
+
+type D = readonly [number, string]; // readonly [number, string]
+type E = Readonly<[number, string]>; // readonly [number, string]
+```
+
+&nbsp;  
+
