@@ -172,6 +172,7 @@ type Sum = (...numbers: number[]) => number;
 &nbsp;  
 
 * 특정 호출 시그니처를 만족하는 함수를 구현하기 위해선 함수 표현식을 사용할 수 있다.
+* 호출 시그니처를 사용하여 함수를 정의하면 매개변수의 타입을 생략할 수 있다. 타입이 생략된 매개변수는 타입스크립트가 **문맥적 타입화(contextual typing)**를 통해 타입을 추론할 수 있다.
 
 ```typescript
 type Add = (a: number, b: number) => number;
@@ -192,4 +193,105 @@ const sum = add(1, 2); // number
 > 단, 열거형, 클래스, 네임스페이스는 실제로 타입과 값 모두 생성하며 네임스페이스는 값 수준에서 존재하기 때문에 타입 수준 혹은 값 수준으로 나눌 수 없다.
 
 &nbsp;  
+
+### 4.1.5. 문맥적 타입화
+
+* 타입스크립트의 타입 추론 기능
+
+```typescript
+function times(f: (index: number) => void, n: number) {
+  for (let i = 0; i < n; i++) {
+    f(i);
+  }
+}
+
+// times를 호출할 때 함수 선언을 인라인으로 제공하면 인수로 전달하는 함수의 타입을 명시할 필요가 없다.
+// 만약 f를 인라인으로 선언하지 않으면 타입스크립트는 타입을 추론할 수 없다.
+function f(n) { // 에러: 매개변수 'n'의 타입은 암묵적으로 'any' 타입이 됨
+  console.log(n);
+}
+times(f, 4);
+
+// times의 시그니처에서 f의 인수 index를 number로 선언했으므로
+// 타입스크립트는 문맥상 n이 number임을 추론할 수 있다.
+times((n) => console.log(n), 4);
+```
+
+&nbsp;  
+
+### 4.1.6. 오버로드된 함수 타입
+
+* 호출 시그니처가 여러 개인 함수
+* 단축 호출 시그니처가 아닌 전체 호출 시그니처를 작성하여 함수 오버로딩을 표현할 수 있다.
+* 자바스크립트는 동적 언어이므로 어떤 함수를 호출하는 방법이 여러 가지이다. 또한 인수 입력 타입에 따라 반환 타입이 달라질 때도 있다.
+* **타입스크립트는 자바스크립트 함수의 동적 특징을 오버로드된 함수 선언으로 제공하고, 입력 타입에 따라 달라지는 함수의 출력 타입은 정적 타입 시스템으로 각각 제공한다.**
+
+```typescript
+// 단축 호출 시그니처
+type Log = (message: string, userId?: string) => void;
+
+// 전체 호출 시그니처
+type Reserve = {
+  (from: Date, to: Date, destination: string): void;
+  (from: Date, destination: string): void;
+};
+```
+
+&nbsp;  
+
+* 여러 개의 오버로드 시그니처를 갖는 함수를 구현하는 관점에서는 **단일한 구현**으로 조합된 타입을 나타낼 수 있어야 한다. **조합된 시그니처는 자동으로 추론되지 않으므로 f를 구현할 때 직접 선언해야한다.**
+* 함수 f를 호출 할 수 있는 방법이 2개 이상인 경우 타입스크립트에 f가 어떤 방식으로 호출되지는지 확인 시켜주어야한다 (정제)
+* 오버로드를 사용할 때는 함수를 쉽게 구현할 수 있도록 가능한 구현의 시그니처를 특정하는 것이 좋다. (ex. `from` 매개변수의 타입을 `any`가 아닌 `Date`으로)
+
+```typescript
+type Reserve = {
+  (from: Date, to: Date, destination: string): void;
+  (from: Date, destination: string): void;
+};
+
+const reserve: Reserve = (
+  from: Date,
+  toOrDestination: Date | string,
+  destination?: string
+) => {
+  if (toOrDestination instanceof Date && destination !== undefined) {
+    // 왕복 여행 예약
+  } else if (typeof toOrDestination === 'string') {
+    // 편도 여행 예약
+  }
+};
+```
+
+&nbsp;  
+
+* 함수 f에 여러 개의 오버로드 시그니처를 선언하면, 호출자 관점에서 f의 타입은 오버로드 시그니처들의 유니온이 된다.
+
+<img src="https://user-images.githubusercontent.com/32444914/131142287-9999d9dd-19fe-45eb-b0ee-27a9295d17e5.png" alt="Screen Shot 2021-08-27 at 9.33.31 PM" style="zoom:50%;" />
+
+<img src="https://user-images.githubusercontent.com/32444914/131142310-ac9f9fa1-88fd-4bab-82aa-b31b8d20d81f.png" alt="Screen Shot 2021-08-27 at 9.33.38 PM" style="zoom:50%;" />
+
+&nbsp;  
+
+* 타입스크립트는 선언한 순서대로 오버로드를 해석한다
+* 오버로드에 지정되지 않은 매개변수 타입을 전달할 수 있도록 함수를 구현하는 경우, 적절한 리턴 타입을 작성해주어야한다.
+
+```typescript
+// 함수 선언을 오버로딩
+function createElement(tag: 'a'): HTMLAnchorElement;
+function createElement(tag: 'canvas'): HTMLCanvasElement;
+function createElement(tag: 'table'): HTMLTableElement;
+function createElement(tag: string): HTMLElement {
+  if (tag === 'a') {
+    return new HTMLAnchorElement();
+  } else if (tag === 'canvas') {
+    return new HTMLCanvasElement();
+  } else if (tag === 'table') {
+    return new HTMLTableElement();
+  } else {
+    return new HTMLElement();
+  }
+}
+```
+
+&nbsp;  
 
