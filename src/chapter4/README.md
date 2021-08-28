@@ -374,5 +374,119 @@ let filter: Filter<number> = (array, f) => {
 
 &nbsp;  
 
+### 4.2.2. 제네릭 타입 추론
 
+* 제네릭의 타입을 명시할 때는 모든 필요한 제네릭 타입을 명시하거나 반대로 아무것도 명시해서는 안 된다.
+
+```typescript
+function map<T, U>(array: T[], f: (item: T) => U): U[] {
+  let result = [];
+  for (let i = 0; i < array.length; i++) {
+    result[i] = f(array[i]);
+  }
+  return result;
+}
+
+// T는 number, U는 boolean으로 추론된다.
+map([1, 2, 3], (num) => num < 10);
+
+// T는 number, U는 number로 타입을 명시한다.
+map<string, number>(['a', 'b'], (str) => str.length);
+
+// 제네릭 타입을 명시할 때는 필요한 모든 제네릭 타입을 명시해야한다.
+// 에러: 두 개의 타입 인수가 필요한 데 한 개만 전달됨.
+map<string>(['a', 'b'], (str) => str.length);
+```
+
+&nbsp;  
+
+### 4.2.3. 제네릭 타입 별칭
+
+* 타입 별칭에서는 타입 별칭명과 할당 기호(`=`) 사이에만 제네릭 타입을 선언할 수 있다.
+* 제네릭 타입 별칭을 사용할 때는 제네릭 타입이 자동으로 추론되지 않으므로 타입 매개변수를 명시적으로 한정해야 한다.
+
+```typescript
+type MyEvent<T> = {
+	target: T;
+  type: string;
+}
+
+let myEvent: MyEvent<HTMLButtonElement | null> = {
+  target: document.querySelector('#myButton'),
+  type: 'click'
+}
+```
+
+&nbsp;  
+
+### 4.2.4. 한정된 다형성
+
+* 타입의 상한 한계(upper bound) - "U 타입은 적어도 T 타입을 포함한다."
+* T 타입에 대한 최소한의 정보를 제공하여 T 타입으로 할 수 있는 동작을 안전하게 처리할 수 있음.
+* `extends` 키워드를 사용하여 T의 상한 한계를 정할 수 있다. (ex. `T`의 상한 한계를 `TreeNode`로 정하여 `node.value`를 안전하게 읽을 수 있다.)
+* `T extends U`라고 표현함으로써 `U`의 서브타입을 사용하더라도, 해당 서브타입의 정보를 보존할 수 있다. (ex. `LeafNode`를 전달하여 `mapNode`를 호출하면, 반환 타입이 `LeafNode`로 보존된다.)
+
+```typescript
+// 일반 TreeNode
+type TreeNode = {
+  value: string;
+};
+
+// 자식 노드가 없는 LeafNode
+type LeafNode = TreeNode & {
+  isLeaf: boolean;
+};
+
+// 자식을 갖는 TreeNode
+type InnerNode = TreeNode & {
+  children: [TreeNode] | [TreeNode, TreeNode];
+};
+
+// TreeNode를 인수로 받아 value에 매핑 함수를 적용하여 새로운 TreeNode를 반환하는 함수
+// T의 상한 경계는 TreeNode이다. 즉, T는 TreeNode이거나, TreeNode의 서브타입이어야한다.
+function mapNode<T extends TreeNode>(node: T, f: (value: string) => string): T {
+  return {
+    ...node,
+    value: f(node.value),
+  };
+}
+
+const a: TreeNode = { value: 'a' };
+const b: LeafNode = { value: 'b', isLeaf: true };
+const c: InnerNode = { value: 'c', children: [b] };
+
+const a1 = mapNode(a, (str) => str.toUpperCase()); // TreeNode
+const b1 = mapNode(b, (str) => str.toUpperCase()); // LeafNode
+const c1 = mapNode(c, (str) => str.toUpperCase()); // InnerNode
+```
+
+&nbsp;  
+
+**여러 제한을 적용한 한정된 다형성**
+
+* 타입의 상한 한계(타입 제한)을 타입 인터섹션(`&`)을 통해 여러 개 추가 할 수 있다.
+
+```typescript
+type HasSides = {
+  numberOfSides: number;
+};
+
+type SidesHaveLength = {
+  sideLength: number;
+};
+
+// 여러 제한을 적용한 한정된 다형성
+function logPerimeter<Shape extends HasSides & SidesHaveLength>(s: Shape) {
+  console.log(s.numberOfSides * s.sideLength);
+  return s;
+}
+
+type Square = HasSides & SidesHaveLength;
+const square: Square = { numberOfSides: 4, sideLength: 3 };
+logPerimeter(square);
+```
+
+&nbsp;  
+
+**한정된 다형성으로 인수의 개수 정의하기**
 
