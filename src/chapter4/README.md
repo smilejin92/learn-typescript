@@ -488,5 +488,54 @@ logPerimeter(square);
 
 &nbsp;  
 
-**한정된 다형성으로 인수의 개수 정의하기**
+### 4.2.5. 제네릭 타입 기본 값
 
+* 제네릭 타입 매개변수에도 기본 타입을 지정할 수 있다.
+
+```typescript
+type MyEvent<T = HTMLElement> = {
+  target: T;
+  type: string;
+};
+
+let buttonEvent: MyEvent2<HTMLButtonElement> = {
+  target: new HTMLButtonElement(),
+  type: 'string',
+};
+```
+
+&nbsp;  
+
+* 제네릭 타입 기본 값과 한정된 다형성을 함께 사용할 수 있다.
+
+```typescript
+// T는 HTMLElement의 서브셋이며, 기본 타입은 HTMLElement이다.
+type MyEvent<T extends HTMLElement = HTMLElement> = {
+  target: T;
+  type: string;
+};
+```
+
+&nbsp;  
+
+* 함수의 선택적 매개변수처럼 기본 타입을 갖는 제네릭은 반드시 기본 타입을 갖지 않는 제네릭의 뒤에 위치해야 한다.
+
+```typescript
+type MyEvent<
+  Type extends string,
+  Target extends HTMLElement = HTMLElement
+> = {
+	target: Target;
+  type: Type;
+}
+```
+
+&nbsp;  
+
+## 4.3. 타입 주도 개발
+
+* **타입 주도 개발** - 타입 시그니처를 먼저 정하고 값을 나중에 채우는 프로그래밍 방식
+* 표현식이 수용할 수 있는 값의 타입을 제한하는 것이 정적 타입 시스템의 핵심이다.
+* 타입스크립트 프로그램을 구현할 때는 먼저 함수의 타입 시그니처를 정의한 다음(type driven), 구현을 추가한다. 구현을 시작하기 전에 프로그램을 타입 수준에서 구상해보면 모든 것이 이치에 맞는지를 상위 수준에서 확일할 수있다.
+
+&nbsp;  
