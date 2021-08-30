@@ -64,6 +64,7 @@ a('z'); // number 타입의 매개변수에 'z'라는 인수 타입을 할당할
 * [타입스크립트 Overview](./src/chapter2)
 * [타입의 모든 것](./src/chapter3)
 * [함수](./src/chapter4)
+* [클래스와 인터페이스](./src/chapter5)
 
 &nbsp;  
 
