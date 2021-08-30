@@ -130,4 +130,28 @@ type Square = HasSides & SidesHaveLength;
 const square: Square = { numberOfSides: 4, sideLength: 3 };
 logPerimeter(square);
 
+// 한정된 다형성으로 인수의 개수 정의하기
+function call<T extends unknown[], R>(f: (...args: T) => R, ...args: T): R {
+  return f(...args);
+}
+
+function fill(length: number, value: string): string[] {
+  return Array.from({ length }, () => value);
+}
+
+call(fill, 10, 'a');
+
+// 제네릭 타입 매개변수에도 기본 타입을 지정할 수 있다.
+type MyEvent2<T = HTMLElement> = {
+  target: T;
+  type: string;
+};
+
+// 제네릭 타입 기본 값과 한정된 다형성을 함께 사용할 수 있다.
+// T는 HTMLElement의 서브셋이며, 기본 타입은 HTMLElement이다.
+type MyEvent3<T extends HTMLElement = HTMLElement> = {
+  target: T;
+  type: string;
+};
+
 export {};
