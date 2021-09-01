@@ -290,7 +290,267 @@ interface Human<Age extends string> {
 }
 ```
 
+```typescript
+// 중복된 타입 별칭은 사용할 수 없다.
+// 에러: 중복된 식별자 'Person'
+type Person = {
+  name: string
+};
+
+// 에러: 중복된 식별자 'Person'
+type Person = {
+  age: number
+};
+```
+
 &nbsp;  
 
 ### 5.4.2. 구현
+
+* 클래스를 선언할 때 `implements` 키워드를 사용하여 특정 인터페이스를 만족시킴을 표현할 수 있다. `implements` 키워드는 타입 수준의 제한을 추가하여 구현에 문제가 있을 때 어디가 잘못되었는지 쉽게 파악할 수 있게 해준다.
+* 인터페이스를 `implements`할 때 인터페이스에 선언된 모든 프로퍼티와 메소드를 구현해야하며, 필요하다면 메서드나 프로퍼티를 추가로 구현할 수 있다.
+* 인터페이스로 인스턴스 프로퍼티를 정의할 수 있지만, 가시성 한정자(`public`, `private`, `protected`)는 선언할 수 없으며, static 키워드도 사용할 수 없다.
+* 인스턴스 프로퍼티를 `readonly`로 설정할 수 있다.
+
+```typescript
+interface Animal {
+  readonly name: string;
+  eat(food: string): void;
+  sleep(hours: number): void;
+}
+
+class Cat implements Animal {
+  constructor(public name: string) {}
+
+  eat(food: string) {
+    console.log(`eat ${food}`);
+  }
+
+  sleep(hours: number) {
+    console.log(`sleep ${hours}`);
+  }
+}
+
+new Cat('neo');
+```
+
+&nbsp;  
+
+* 한 클래스가 여러 인터페이스를 구현할 수 있다.
+
+```typescript
+interface Animal {
+  readonly name: string;
+  eat(food: string): void;
+  sleep(hours: number): void;
+}
+
+interface Feline {
+  meow(): void;
+}
+
+class Cat implements Animal, Feline {
+  constructor(public name: string) {}
+
+  eat(food: string) {
+    console.log(`eat ${food}`);
+  }
+
+  sleep(hours: number) {
+    console.log(`sleep ${hours}`);
+  }
+
+  meow() {
+    console.log('meow');
+  }
+}
+```
+
+&nbsp;  
+
+### 5.4.3. 인터페이스 구현 vs. 추상 클래스 상속
+
+* 여러 클래스에서 공유하는 구현이라면 추상 클래스를 사용
+* 가볍게 "이 클래스는 T다"라고 말하는 것이 목적이면 인터페이스를 사용
+
+| 특징                         | 인터페이스                                   | 추상 클래스                  |
+| ---------------------------- | -------------------------------------------- | ---------------------------- |
+| 형태를 정의하는 수단         | 객체, 배열, 함수, 클래스, 클래스 인스턴스 등 | 오직 클래스만 정의           |
+| 런타임 코드 생성             | X                                            | O (자바스크립트 클래스 코드) |
+| 프로퍼티, 메소드 접근 한정자 | X                                            | O                            |
+| 생성자와 기본 구현           | X                                            | O                            |
+| `readonly` 키워드            | O                                            | O                            |
+
+&nbsp;  
+
+## 5.5. 클래스는 구조 기반 타입을 지원한다.
+
+* 타입스크립트는 클래스를 비교할 때 다른 타입과 달리 이름이 아니라 구조를 기준으로 삼는다. 즉, **클래스는 자신과 똑같은 프로퍼티와 메서드를 정의하는 기존의 일반 객체, 혹은 클래스의 형태를 공유하는 다른 모든 타입과 호환된다.**
+
+```typescript
+class Zebra {
+  trot() {
+    // ...
+  }
+}
+
+class Poodle {
+  trot() {
+    // ...
+  }
+}
+
+function ambleAround(animal: Zebra) {
+  animal.trot();
+}
+
+ambleAround(new Zebra()); // OK
+ambleAround(new Poodle()); // OK
+
+```
+
+&nbsp;  
+
+* 단, `private`이나 `protected` 필드를 가지는 클래스 인스턴스는 일반 객체와는 호환되지 않는다.
+
+```typescript
+class A {
+  private x = 1;
+}
+
+class B extends A {}
+
+function f(a: A) {}
+
+f(new A());
+f(new B());
+
+// 에러: 인수 '{ x: number }' 타입은 매개변수 'A' 타입에 할당할 수 없음.
+// 'A'의 'x' 프로퍼티는 private이지만, '{ x: number }'는 private이 아님.
+f({ x: 1 });
+```
+
+&nbsp;  
+
+## 5.6. 클래스는 값과 타입을 모두 선언한다.
+
+* 타입스크립트의 거의 모든 것은 값 아니면 타입이다.
+* 값과 타입은 타입스크립트에서 별도의 네임스페이스에 존재한다.
+
+```typescript
+// 값
+let a = 1999;
+function b() {}
+
+// 타입
+type a = number;
+interface b {
+  (): void;
+}
+
+// 문맥상 타입스크립트는 값 a로 추론함
+if (a + 1 > 3) { /* ... */ }
+
+// 문맥상 타입스크립트는 타입 a로 추론함
+const x: a = 3;
+```
+
+&nbsp;  
+
+* 클래스와 열거형은 타입 네임스페이스에 타입을, 값 네임스페이스에 값을 동시에 생성한다.
+* 클래스와 열거형은 타입 수준에서 타입을 생성하기 때문에 'is-a' 관계를 쉽게 표현할 수 있다.
+
+```typescript
+class C {}
+
+let c: C // 문맥상 C는 C 클래스의 인스턴스 타입을 가리킨다.
+	= new C(); // 문맥상 C는 값 C를 가리킨다.
+```
+
+&nbsp;  
+
+* 클래스 자체(생성자 타입)를 가리키기 위해서는 `typeof` 연산자를 사용하면 된다.
+
+```typescript
+type State = {
+  [key: string]: string;
+};
+
+class StringDatabase {
+  state: State = {};
+
+  get(key: string) {
+    return key in this.state ? this.state[key] : null;
+  }
+
+  set(key: string, value: string): void {
+    this.state[key] = value;
+  }
+
+  static from(state: State) {
+    let db = new StringDatabase();
+
+    for (const key in state) {
+      db.set(key, state[key]);
+    }
+
+    return db;
+  }
+}
+```
+
+```typescript
+// 위 StringDatabae 클래스는 아래 2개 타입을 생성한다.
+// StringDatabase 인스턴스 타입
+interface StringDatabase {
+  state: State;
+  get(key: string): string | null;
+  set(key: string, value: string): void;
+}
+
+// 생성자 타입 (typeof StringDatabase)
+interface StringDatabaseConstructor {
+  new(): StringDatabase;
+  from(state: State): StringDatabase;
+}
+```
+
+* `new()` 코드를 생성자 시그니처(contructor signature)라 부르며, 생성자 시그니처는 `new` 연산자로 해당 타입을 인스턴스화할 수 있음을 정의하는 타입스크립트의 방식이다.
+  * 타입스크립트는 구조를 기반으로 타입을 구분하기 때문에, 이 방식이 "클래스란 `new`로 인스턴스화할 수 있는 어떤 것"이라고 기술할 수 있는 최선이다.
+
+&nbsp;  
+
+## 5.7. 다형성
+
+* 클래스와 인터페이스도 기본값과 상한/하한 제네릭 타입 매개변수 기능을 지원한다.
+* 제네릭 타입의 범위는 클래스나 인터페이스 전체가 되게 할 수도 있고, 특정 메소드로 한정할 수도 있다.
+
+```typescript
+// 1. class와 함께 제네릭을 선언했으므로 클래스 전체에서 타입을 사용할 수 있다.
+// MyMap의 모든 인스턴스 메서드, 인스턴스 프로퍼티에서 K와 V를 사용할 수 있다.
+class MyMap<K, V> {
+  constructor(public initialKey: K, public initialValue: V) {
+    // 2. constructor에서는 제네릭 타입을 선언할 수 없다.
+  }
+
+  get(key: K): V {
+    // 3. 클래스로 한정된 제네릭 타입은 클래스 내부의 어디에서나 사용할 수 있다.
+  }
+
+  set(key: K, value: V): void {
+    // ...
+  }
+
+  merge<K1, V1>(map: MyMap<K1, V1>): MyMap<K | K1, V | V1> {
+    // 4. 인스턴스 메서드는 클래스 수준 제네릭을 사용할 수 있으며, 자신만의 제네릭도 추가로 선언할 수 있다.
+  }
+
+  static of<K, V>(k: K, v: V): MyMap<K, V> {
+    // 5. 정적 메서드는 클래스 수준의 제네릭을 사용할 수 없다.
+    // 따라서 of는 1에서 선언한 K와 V에 접근할 수 없고, 자신만의 K와 V를 직접 선언했다.
+  }
+}
+```
+
+&nbsp;  
 
