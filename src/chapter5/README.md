@@ -165,11 +165,132 @@ class MutableSet extends CustomSet {
   }
 }
 
-new CustomSet(/* ... */).add(3); // CustomSet 인스턴스
-new MutableSet(/* ... */).add(3); // MutableSet 인스턴스
+new CustomSet().add(3); // CustomSet 인스턴스
+new MutableSet().add(3); // MutableSet 인스턴스
 ```
 
 &nbsp;  
 
 ## 5.4. 인터페이스
+
+* 타입 별칭처럼 인터페이스도 타입에 이름을 지어주는 수단이다.
+* 타입 별칭과 인터페이스는 문법만 다를 뿐 거의 같은 기능을 수행한다.
+* 인터페이스는 다른 인터페이스, 객체 타입, 클래스 모두를 상속 받을 수 있다.
+
+```typescript
+// 타입 별칭과 확장
+type Food = {
+  calories: number;
+  tasty: boolean;
+};
+
+type Shushi = Food & {
+  salty: boolean;
+};
+
+type Cake = Food & {
+  sweet: boolean;
+};
+
+// 인터페이스와 상속
+interface Food {
+  caloris: number;
+  tasty: boolean;
+}
+
+interface Sushi extends Food {
+  salty: boolean;
+}
+
+interface Cake extends Food {
+  sweet: boolean;
+}
+```
+
+&nbsp;  
+
+### 5.4.1. 인터페이스 vs. 타입 별칭
+
+* 타입 별칭은 더 일반적이어서 타입 별칭의 오른편에는 타입 표현식을 포함한 모든 타입이 등장할 수 있다. 반면, **인터페이스의 오른편에는 반드시 형태가 나와야한다.**
+  * 타입 표현식: 타입, `&`, `|` 등의 타입 연산자
+
+```typescript
+// 아래 타입 별칭 코드는 인터페이스로 작성할 수 없다.
+type A = number;
+type B = A | string;
+```
+
+&nbsp;  
+
+* 인터페이스를 상속할 때 상속받는 인터페이스(`A`)의 타입에 상위 인터페이스(`B`)를 할당 할 수 있는지 확인한다. 이러한 **할당성 확인 기능**을 통해 객체 타입의 상속을 표현할 때 발생하는 에러를 쉽게 검출 할 수 있다.
+* 반면, 인터섹션(`&`)으로 타입을 확장하면, 타입스크립트는 최대한 조합하는 방향으로 동작한다. 아래 예제에서 `B` 타입은 `bad`를 오버로드한 시그니처를 만들어낸다.
+
+```typescript
+interface A {
+  good(x: number): string;
+  bad(x: number): string;
+}
+
+interface B extends A {
+  good(x: number | string): string;
+  bad(x: string): string; // 에러: 인터페이스 'B'는 인터페이스 'A'를 올바르게 상속받지 않음
+}
+```
+
+```typescript
+type A = {
+  good(x: number): string;
+	bad(x: number): string;
+}
+
+type B = A & {
+  good(x: number | string): string;
+	bad(x: string): string;
+}
+```
+
+&nbsp;  
+
+* 이름과 범위가 같은 인터페이스가 여러 개 있다면, 이들이 자동으로 합쳐진다. 이를 **선언 합침**이라 부른다.
+  * 프로퍼티 키가 같을 경우, 프로퍼티 값의 타입이 동일하지 않다면 에러가 발생한다.
+  * 제네릭을 선언한 인터페이스들의 경우 제네릭의 선언 방법과 이름까지 똑같아야 합칠 수 있다.
+* 중복된 타입 별칭은 사용할 수 없다.
+
+```typescript
+// 선언 합침
+interface User {
+  name: string;
+}
+
+interface User {
+  age: number;
+}
+
+const a: User = {
+  name: 'Jin',
+  age: 999,
+};
+
+// 프로퍼티 키가 같을 경우, 프로퍼티 값의 타입이 동일하지 않다면 에러가 발생한다.
+interface Person {
+  age: string;
+}
+
+interface Person {
+  age: number; // 에러: 다른 프로퍼티 선언도 같은 타입을 가져야 함
+}
+
+// 제네릭을 선언한 인터페이스의 경우 제네릭의 선언 방법과 이름까지 똑같아야 합칠 수 있다.
+interface Human<Age extends number> { // 에러: 'Human'의 모든 선언은 같은 타입 매개변수를 가져야 함
+  age: Age;
+}
+
+interface Human<Age extends string> {
+  age: Age;
+}
+```
+
+&nbsp;  
+
+### 5.4.2. 구현
 
