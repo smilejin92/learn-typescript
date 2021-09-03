@@ -554,3 +554,86 @@ class MyMap<K, V> {
 
 &nbsp;  
 
+## 5.8. 디자인 패턴
+
+### 5.8.1. 팩토리 패턴
+
+* 팩토리 패턴은 어떤 객체를 만들지를 전적으로 팩토리에 위임한다.
+* 호출자는 팩토리가 특정 인터페이스를 만족하는 클래스를 제공할 것이라는 사실만 알 뿐, 어떤 구체 클래스가 이 일을 하는지 알 수 없어야 한다. (팩토리 패턴이 제공하는 추상화 규칙을 깬다.)
+
+```typescript
+type Shoe = {
+  purpose: string;
+};
+
+class BalletFalt implements Shoe {
+  purpose = 'dancing';
+}
+
+class Boot implements Shoe {
+  purpose = 'woodcutting';
+}
+
+class Sneaker implements Shoe {
+  purpose = 'walking';
+}
+
+const Shoe = {
+  create(type: 'balletFlat' | 'boot' | 'sneaker'): Shoe {
+    switch (type) {
+      case 'balletFlat':
+        return new BalletFalt();
+      case 'boot':
+        return new Boot();
+      case 'sneaker':
+        return new Sneaker();
+    }
+  },
+};
+
+const boot = Shoe.create('boot'); // Shoe
+```
+
+&nbsp;  
+
+### 5.8.2. 빌더 패턴
+
+* 객체의 생성과 객체 구현 방식을 분리할 수 있다.
+
+```typescript
+class RequestBuilder<T> {
+  private url: string | null = null;
+  private method: 'get' | 'post' | null = null;
+  private data: T | null = null;
+
+  // 빌더의 메소드는 인스턴스(this)를 반환한다.
+  setURL(url: string): this {
+    this.url = url;
+    return this;
+  }
+
+  setMethod(method: 'get' | 'post'): this {
+    this.method = method;
+    return this;
+  }
+
+  setData(data: T): this {
+    this.data = data;
+    return this;
+  }
+	
+	// url, method, data를 설정하였는지 검사가 필요
+  send() {
+    // ...
+  }
+}
+
+new RequestBuilder()
+  .setURL('/users')
+  .setMethod('post')
+  .setData({ firstName: 'Jin' })
+  .send();
+```
+
+&nbsp;  
+
