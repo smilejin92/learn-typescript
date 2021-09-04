@@ -12,7 +12,7 @@
 
 ```typescript
 // 매개변수의 타입을 제한하면, 타입스크립트가 함수를 호출할 때 호환이 되는 인수로 호출했는지 판단한다.
-function sqareOf(n: number) {
+function squareOf(n: number) {
   return n * n;
 }
 squareOf(2); // 4로 평가
