@@ -31,3 +31,5 @@ const Shoe = {
 
 // 호출자는 팩토리가 특정 인터페이스를 만족하는 클래스를 제공할 것이라는 사실만 알 뿐, 어떤 구체 클래스가 이일을 하는지 알 수 없어야 한다.
 const boot = Shoe.create('boot'); // Shoe
+
+export {};

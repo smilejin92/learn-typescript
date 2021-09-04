@@ -30,3 +30,5 @@ new RequestBuilder()
   .setMethod('post')
   .setData({ firstName: 'Jin' })
   .send();
+
+export {};
