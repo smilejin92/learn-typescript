@@ -66,3 +66,71 @@ deleteUser(legacyUser);
 
 &nbsp;  
 
+### 6.1.3. 할당성
+
+* **할당성** - A라는 타입을 다른 B라는 타입이 필요한 곳에 사용할 수 있는지 결정하는 타입스크립트의 규칙
+* 열거형이 아닌 타입에서는 다음 규칙으로 A를 B에 할당할 수 있는지 결정한다.
+  * A <: B (A는 B의 서브타입이거나 같은 타입)
+  * A는 any (자바스크립트 코드와 상호 운용할 때 유용)
+
+&nbsp;  
+
+### 6.1.4. 타입 넓히기
+
+* `let`이나 `var` 키워드로 변수를 선언하면, 그 변수의 타입이 리터럴 값에서 리터럴 값이 속한 기본 타입으로 넓혀진다.
+
+```typescript
+let a = 'a'; // string
+let b = 3; // number
+var c = true; // boolean
+const d = { x: 3 }; // { x: number }
+```
+
+&nbsp;  
+
+* 타입을 명시하면 타입이 넓어지지 않도록 막을 수 있다.
+
+```typescript
+let a: 'a' = 'a'; // 'a'
+let b: 3 = 3; // 3
+var c: true = true;
+const d: { x: 3 } = { x: 3 }; // { x: 3 }
+```
+
+&nbsp;  
+
+* 값을 바꿀 수 없는 변수의 타입은 리터럴 타입으로 좁혀진다.
+
+```typescript
+const a = 'a'; // 'a'
+const b = 3; // 3
+const c = true; // true
+```
+
+&nbsp;  
+
+* `null`이나 `undefined`로 초기화된 변수는 `any` 타입으로 넓혀진다.
+
+```typescript
+let a = null; // any
+a = 3; // any
+a = 'b'; // any
+```
+
+&nbsp;  
+
+* `null`이나 `undefined`로 초기화된 변수가 **선언 범위를 벗어나면** 타입스크립트는 확실한 타입을 할당한다.
+
+```typescript
+function x() {
+  let a = null; // any
+  a = 3; // any
+  a = 'b'; // any
+  return a;
+}
+
+x(); // string
+```
+
+&nbsp;  
+
