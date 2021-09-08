@@ -134,3 +134,96 @@ x(); // string
 
 &nbsp;  
 
+**const 타입**
+
+* 타입스크립트는 **타입이 넓혀지지 않도록 해주는**  `const`라는 특별 타입을 제공한다.
+* const 타입은 타입 어서션으로 활용된다.
+* const를 사용하면 타입 넓히기가 중지되며, 멤버들까지 자동으로 readonly가 된다 (**중첩된 자료구조에도 재귀적으로 적용된다.**)
+
+```typescript
+let a = { x: 3 }; // { x: number }
+let b: { x: 3 }; // { x: 3 }
+let c = { x: 3 } as const; // { readonly x: 3 }
+let d = [1, { x: 2 }] as const; // [1, { readonly x: 2 }]
+```
+
+&nbsp;  
+
+**초과 프로퍼티 확인**
+
+* 타입스크립트는 한 객체 타입을 다른 객체 타입에 할당할 수 있는지 확인할 때도 타입 넓히기를 사용한다.
+* 이때 "객체 타입과 그 멤버들은 공변 관계이다."라는 규칙만을 적용하면 문제가 발생할 수 있다.
+
+```typescript
+type Options = {
+	baseURL: string;
+  cacheSize?: number;
+  tier?: 'prod' | 'dev';
+}
+
+class API {
+  constructor(private options: Options) {}
+}
+
+// 만약 초과 프로퍼티 확인을 하지 않는다면 아래 코드는 유효하다.
+new API({
+  baseURL: 'https://api.mysite.com',
+  // tier가 아닌 tierr로 작성했지만, 객체 타입과 그 멤버들은 공변 관계이기 때문에
+  // Options 타입의 서브타입으로서 인정될 수 있다.
+  tierr: 'prod',
+});
+```
+
+&nbsp;  
+
+* 신선한(fresh) 객체 리터럴 타입 T를 다른 타입 U에 할당하려는 상황에서, T가 U에는 존재하지 않는 프로퍼티를 가지고 있다면 타입스크립트는 이를 에러로 처리한다.
+  * **신선한 객체 리터럴 타입** - 타입스크립트가 객체 리터럴로부터 추론한 타입. 객체 리터럴이 타입 어서션을 사용하거나, 변수로 할당되면 신선한 객체 리터럴 타입은 일반 객체 타입으로 넓혀지면서 신선함은 사라진다.
+
+```typescript
+type Options = {
+	baseURL: string;
+  cacheSize?: number;
+  tier?: 'prod' | 'dev';
+}
+
+// 1. { baseURL: string, cacheSize?: number, tier?: 'prod' | 'dev' } 타입이 필요하다.
+class API {
+  constructor(private options: Options) {}
+}
+
+// 2. { baseURL: string, tierr: string } 타입을 전달했다.
+new API({
+  baseURL: 'https://api.mysite.com',
+  tierr: 'prod',
+});
+
+// 3. 필요한 타입의 서브타입을 전달했지만, 타입스크립트는 이를 에러로 판단한다.
+// 에러: '{ baseURL: string, tierr: string }' 타입은 파라미터 타입 Options에 할당할 수 없음
+// 객체 리터럴은 알려진 프로퍼티만 지정할 수 있는데, 'tierr'라는 프로퍼티는 Options에 존재하지 않음
+
+// 4. 유효하지 않은 옵션 객체를 Options 타입으로 타입 어서션했다. 이때 객체 리터럴은 더 이상 신선하지 않으므로 초과 프로퍼티 검사를 수행하지 않으며, 아무 에러도 발생하지 않는다.
+new API({
+  baseURL: 'https://api.mysite.com',
+  tierr: 'prod',
+} as Options);
+
+// 5. 옵션 객체를 변수 badOptions에 할당했다. 타입스크립트는 이 객체를 더 이상 신선하지 않다고 여기기 때문에 초과 프로퍼티 검사를 수행하지 않으며, 아무 에러도 발생하지 않는다.
+let badOptions = {
+  baseURL: 'https://api.mysite.com',
+  tierr: 'prod',
+};
+
+new API(badOptions)
+
+// 6. options의 타입을 Options로 명시하면 할당된 객체는 신선한 객체로 취급한다.
+// 따라서 타입스크립트는 초과 프로퍼티 검사를 수행하고 버그를 찾아낸다.
+let options: Options = {
+  baseURL: 'https://api.mysite.com',
+  tierr: 'prod',
+}
+// 에러: '{ baseURL: string, tierr: string }' 타입은 파라미터 타입 Options에 할당할 수 없음
+// 객체 리터럴은 알려진 프로퍼티만 지정할 수 있는데, 'tierr'라는 프로퍼티는 Options에 존재하지 않음
+```
+
+&nbsp;  
+
