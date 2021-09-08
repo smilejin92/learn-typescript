@@ -21,3 +21,5 @@ const existingUser: ExistingUser = {
 deleteUser(existingUser);
 
 existingUser.id;
+
+export {};
