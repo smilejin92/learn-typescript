@@ -227,3 +227,104 @@ let options: Options = {
 
 &nbsp;  
 
+### 6.1.5. 정제
+
+* 타입 검사기는 `typeof`, `instanceof`, `in` 등의 타입 질의 뿐 아니라, `if`, `?`, `switch` 같은 제어 흐름 문장까지 고려하여 타입을 정제(refinement)한다.
+
+```typescript
+type Width = {
+  value: number;
+  unit: 'cm' | 'px' | '%';
+};
+
+function parseWidth(width: number | string | null | undefined): Width | null {
+  // width가 null이거나 undefined면 반환
+  if (width == null) {
+    return null;
+  }
+
+  // width가 숫자면 픽셀로 취급
+  if (typeof width === 'number') {
+    return {
+      unit: 'px',
+      value: width,
+    };
+  }
+
+  // width로부터 단위 파싱
+  const unit = parseUnit(width); // 'cm' | 'px' | '%'
+  if (unit) {
+    return {
+      unit,
+      value: parseFloat(width),
+    };
+  }
+
+  // 이 외의 경우엔 null 반환
+  return null;
+}
+```
+
+&nbsp;  
+
+**차별된 유니온 타입**
+
+* 유니온 타입을 정제할 때, 유니온의 멤버가 서로 중복될 수 있으므로 타입스크립트는 유니온의 어떤 타입에 해당하는지를 안정적으로 파악할 수 있어야 한다.
+
+```typescript
+type UserTextEvent = {
+  value: string;
+  target: HTMLInputElement;
+};
+
+type UserMouseEvent = {
+  value: [number, number]; // 마우스 좌표
+  target: HTMLElement;
+};
+
+function handle(event: UserTextEvent | UserMouseEvent) {
+  if (typeof event.value === 'string') {
+    event.value; // string (value는 잘 정제되지만, target은 정제되지 않는다)
+    event.target; // HTMLInputElement | HTMLElement (!!!)
+    return;
+  }
+
+  event.value; // [number, number] (value는 잘 정제되지만, target은 정제되지 않는다)
+  event.target; // HTMLInputElement | HTMLElement (!!!)
+}
+```
+
+&nbsp;  
+
+* **리터럴 타입**을 이용해 유니온 타입이 만들어낼 수 있는 각 경우를 태그(tag)하는 방식으로 유니온 타입을 구별할 수 있다.
+* 태그는 유니온 타입에서 고유하므로, 타입스크립트는 둘이 상호 배타적임을 알 수 있다.
+* 유니온 타입의 다양한 경우를 처리하는 함수를 구현해야 한다면 태그된 유니온을 사용할 수 있다. (ex. 리덕스 리듀서)
+
+```typescript
+type UserTextEvent = {
+  value: string;
+  target: HTMLInputElement;
+  type: 'TextEvent'; // 태그 추가
+};
+
+type UserMouseEvent = {
+  value: [number, number];
+  target: HTMLElement;
+  type: 'MouseEvent'; // 태그 추가
+};
+
+function handle(event: UserTextEvent | UserMouseEvent) {
+  if (event.type === 'TextEvent') {
+    event.value; // string
+    event.target; // HTMLInputElement
+    return;
+  }
+
+  event.value; // [number, number]
+  event.target; // HTMLElement
+}
+
+```
+
+&nbsp;  
+
