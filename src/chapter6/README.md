@@ -364,3 +364,61 @@ function getNextDay(w: Weekday): Day {
 
 &nbsp;  
 
+## 6.3. 고급 객체 타입
+
+### 6.3.1. 객체 타입의 타입 연산자
+
+**키인(key-in) 연산자**
+
+* 객체에서 값을 찾는 것처럼 형태에서 타입을 찾을 수 있다.
+* 모든 형태(객체, 클래스 생성자, 클래스 인스턴스)와 배열에 키인할 수 있다.
+* 배열 타입에 키인을 적용하기 위해서는 인덱스를 가리키는 number, 혹은 숫자 리터럴을 사용할 수 있다.
+* 키인 연산자를 사용하기 위해서는 대괄호 표기법을 사용한다.
+
+```typescript
+// key-in 연산자를 사용하지 않았을 때
+type Friend = {
+  firstName: string;
+  lastName: string;
+}
+
+type FriendList = {
+  count: number;
+  friends: Friend[];
+}
+
+type APIResponse = {
+  user: {
+    userId: string;
+    friendList: FriendList;
+  }
+}
+```
+
+```typescript
+// key-in 연산자를 사용했을 때
+type APIResponse = {
+  user: {
+    userId: string;
+    friendList: {
+      count: number;
+      friends: {
+        firstName: string;
+        lastName: string;
+      }[];
+    }
+  }
+}
+
+type FriendList = APIResponse['user']['friendList'];
+type Friend = FriendList['friends'][number];
+```
+
+&nbsp;  
+
+**keyof 연산자**
+
+* keyof 연산자를 사용하면 **객체의 모든 키를 문자열 리터럴 타입 유니온**으로 얻을 수 있다.
+
+&nbsp;  
+
