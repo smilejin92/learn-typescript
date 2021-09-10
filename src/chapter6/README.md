@@ -328,3 +328,39 @@ function handle(event: UserTextEvent | UserMouseEvent) {
 
 &nbsp;  
 
+## 6.2. 종합성
+
+* 철저 검사라고도 불리는 **종합성**은 필요한 **모든 상황을 제대로 처리했는지** 타입 검사기가 검사하는 기능이다. 종합성은 실제로 일어날 버그를 방지하는 데 도움이 되는 기능이다.
+
+```typescript
+type Weekday = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri';
+type Day = Weekday | 'Sat' | 'Sun';
+
+// BAD
+// 에러: 함수에 마무리 반환문이 없으며 반환 타입은 'undefined'를 포함하지 않음
+function getNextDay(w: Weekday): Day {
+  switch (w) {
+    case 'Mon':
+      return 'Tue';
+  }
+}
+
+// GOOD
+function getNextDay(w: Weekday): Day {
+  switch (w) {
+    case 'Mon':
+      return 'Tue';
+    case 'Tue':
+      return 'Wed';
+    case 'Wed':
+      return 'Thu';
+    case 'Thu':
+      return 'Fri';
+    case 'Fri':
+      return 'Sat';
+  }
+}
+```
+
+&nbsp;  
+
