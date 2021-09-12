@@ -420,5 +420,55 @@ type Friend = FriendList['friends'][number];
 
 * keyof 연산자를 사용하면 **객체의 모든 키를 문자열 리터럴 타입 유니온**으로 얻을 수 있다.
 
+```typescript
+type APIResponse = {
+  user: {
+    userId: string;
+    friendList: {
+      count: number;
+      friends: {
+        firstName: string;
+        lastName: string;
+      }[];
+    };
+  };
+};
+
+type ReponseKeys = keyof APIResponse; // 'user'
+type UserKeys = keyof APIResponse['user']; // "userId" | "friendList"
+type FrinedListKeys = keyof APIResponse['user']['friendList']; // "count" | "friends"
+
+```
+
+&nbsp;  
+
+> **keyOfStringsOnly** 플래그
+>
+> 자바스크립트에서 객체와 배열 모두 문자열과 심벌 키를 가질 수 있다. 배열에는 숫자 키를 쓰는 것이 보통인데, 런타임에 숫자 키는 문자열로 강제 변환된다.
+>
+> 이런 이유로 타입스크립트의 keyof는 기본적으로 number | string | symbol 타입의 값을 반환한다. 타입스크립트에게 특정 키가 string이고 number나 symbol이 아니라는 사실을 증명해야하는 상황이 귀찮다면 keyofStringsOnly 플래그를 사용할 수 있다.
+
+&nbsp;  
+
+### 6.3.2. Record 타입
+
+* 타입스크립트의 내장 타입 중 하나
+* 무언가를 매핑하는 용도로 객체를 사용할 때, 그 객체의 타입을 Record로 쓸 수 있다.
+* 일반 인덱스 시그니처에서는 객체 값의 타입은 제한할 수 있지만, 키는 반드시 일반 string, number, symbol이어야 한다. 하지만 Record에서는 객체의 키 타입도 string과 number의 서브타입으로 제한할 수 있다.
+
+```typescript
+type Weekday = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri';
+type Day = Weekday | 'Sat' | 'Sun';
+
+// Record<keyType, valueType>
+const nextDay: Record<Weekday, Day> = {
+  Mon: 'Tue',
+  Tue: 'Wed',
+  Wed: 'Thu',
+  Thu: 'Fri',
+  Fri: 'Sat',
+};
+```
+
 &nbsp;  
 
