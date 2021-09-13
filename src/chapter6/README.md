@@ -472,3 +472,99 @@ const nextDay: Record<Weekday, Day> = {
 
 &nbsp;  
 
+### 6.3.3. 매핑된 타입
+
+* 매핑된 타입은 객체의 키와 값 타입을 매핑하는 수단을 제공한다.
+* 인데스 시그니처와 마찬가지로 한 객체당 **최대 한개**의 매핑된 타입을 가질 수 있다.
+
+```typescript
+type Weekday = 'Mon' | 'Tue' | 'Wed' | 'Thu' | 'Fri';
+type Day = Weekday | 'Sat' | 'Sun';
+
+const nextDay: { [K in Weekday]: Day } = {
+  Mon: 'Tue',
+};
+// 에러: Type '{ Mon: "Tue"; }' is missing the following properties from type '{ Mon: Day; Tue: Day; Wed: Day; Thu: Day; Fri: Day; }': Tue, Wed, Thu, Fri
+```
+
+&nbsp;  
+
+* 매핑된 타입은 객체의 키와 값에 타입을 제공한다.
+* 키인 타입과 조합하면 **키 이름별로 매핑할 수 있는 값 타입을 제한할 수 있다.**
+
+```typescript
+type Account = {
+  id: number;
+  isEmployee: boolean;
+  notes: string[];
+};
+
+// 모든 필드를 선택형으로 만듦
+type OptionalAccount = {
+  [K in keyof Account]?: Account[K];
+};
+
+// type OptionalAccount = {
+//   id?: number | undefined;
+//   isEmployee?: boolean | undefined;
+//   notes?: string[] | undefined;
+// }
+
+// 모든 필드를 nullable로 만듦
+type NullableAccount = {
+  [K in keyof Account]: Account[K] | null;
+};
+
+// type NullableAccount = {
+//   id: number | null;
+//   isEmployee: boolean | null;
+//   notes: string[] | null;
+// }
+
+// 모든 필드를 읽기 전용으로 만듦
+type ReadonlyAccount = {
+  readonly [K in keyof Account]: Account[K];
+};
+
+// type ReadonlyAccount = {
+//   readonly id: number;
+//   readonly isEmployee: boolean;
+//   readonly notes: string[];
+// }
+
+// 모든 필드를 다시 쓸 수 있도록 만듦
+// 매핑된 타입에서만 사용할 수 있는 특별 타입 연산자인 마이너스(-)로 ?와 readonly 표시를 제거할 수 있다.
+type Account2 = {
+  -readonly [K in keyof ReadonlyAccount]: Account[K];
+};
+
+// type Account2 = {
+//   id: number;
+//   isEmployee: boolean;
+//   notes: string[];
+// }
+
+// 모든 필드를 다시 필수형으로 만듦
+type Account3 = {
+  [K in keyof OptionalAccount]-?: Account[K];
+};
+
+// type Account3 = {
+//   id: number;
+//   isEmployee: boolean;
+//   notes: string[];
+// }
+```
+
+&nbsp;  
+
+**내장 매핑된 타입**
+
+* `Record<Keys, Values>` - Keys 타입의 키와 Values 타입의 값을 갖는 객체
+* `Partial<Object>` - Object의 모든 필드를 선택형으로 표시
+* `Required<Object>` - Object의 모든 필드를 필수형으로 표시
+* `Readonly<Object>` - Object의 모든 필드를 읽기 전용으로 표시
+* `Pick<Object, Keys>` - 주어진 Keys에 대응하는 Object의 서브타입을 반환
+
+&nbsp;  
+
