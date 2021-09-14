@@ -568,3 +568,38 @@ type Account3 = {
 
 &nbsp;  
 
+## 6.4. 고급 함수 타입들
+
+### 6.4.1. 튜플의 타입 추론 개선
+
+* 타입스크립트는 튜플의 길이, 특정 인덱스에 어떤 타입이 들어있는지 무시하고 주어진 상황에서 제공할 수 있는 가장 일반적인 타입으로 튜플의 타입을 추론한다.
+
+```typescript
+const a = [1, true]; // (number | boolean)[]
+```
+
+&nbsp;  
+
+* 고정된 길이의 튜플로 취급하고 싶을 경우 타입 어서션, `as const` 어서션을 이용하여 튜플의 타입을 가능한 좁게 추론하는 동시에 읽기 전용으로 만들 수 있다.
+
+```typescript
+const a = [1, true] as [1, true]; // [1, true]
+const b = [1, true] as const; // readonly [1, true]
+```
+
+&nbsp;  
+
+* 타입 어서션, as const 어서션을 사용하지 않고 튜플 타입으로 만들기 위해서는 함수의 나머지 매개변수를 사용할 수 있다.
+* 튜플 타입이 많이 등장하는 코드라면 이 기법을 활용해 타입 어서션 사용을 줄일 수 있다.
+
+```typescript
+// T는 나머지 매개변수를 나타내므로 타입스크립트는 이를 튜플 타입으로 추론한다.
+function tuple<T extends unknown[]>(...ts: T) {
+  return ts;
+}
+
+const a = tuple(1, true); // [number, boolean]
+```
+
+&nbsp;  
+
