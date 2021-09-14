@@ -603,3 +603,56 @@ const a = tuple(1, true); // [number, boolean]
 
 &nbsp;  
 
+### 6.4.2. 사용자 정의 타입 안전 장치 (타입가드)
+
+* 타입 정제는 강력하지만 현재 영역(유효범위)에 속한 변수만을 처리할 수 있다는 것이 문제다. 한 영역에서 다른 영역으로 이동하면 기존의 정제 결과물을 사라진다.
+
+```typescript
+function isString(a: unknown) {
+  return typeof a === 'string';
+}
+
+function parseInput(input: string | number) {
+  let formattedInput: string;
+  if (isString(input)) {
+    // 에러: 'number' 타입에 toUpperCase 프로퍼티가 존재하지 않음
+    formattedInput = input.toUpperCase();
+  }
+}
+
+```
+
+&nbsp;  
+
+* 사용자 정의 타입 가드(user-defined type guard) 기법을 사용하여 위 문제를 해결할 수 있다.
+* 매개변수 타입을 정제하고 boolean을 반환하는 함수가 있다면, 사용자 정의 타입가드를 사용해 함수가 제대로 동작할 수 있게 한다.
+
+```typescript
+function isString(a: unknown): a is string {
+  return typeof a === 'string';
+}
+
+function parseInput(input: string | number) {
+  let formattedInput: string;
+  if (isString(input)) {
+    // 에러: 'number' 타입에 toUpperCase 프로퍼티가 존재하지 않음
+    formattedInput = input.toUpperCase();
+  }
+}
+```
+
+&nbsp;  
+
+* 사용자 정의 타입가드는 매개변수 하나에만 적용할 수 있지만, 유니온과 인터섹션 같은 복합 타입에도 적용할 수 있다.
+
+```typescript
+type LegacyDialog = 'LegacyDialog';
+type Dialog = 'Dialog';
+
+function isLegacyDialog(dialog: LegacyDialog | Dialog): dialog is LegacyDialog {
+  return dialog === 'LegacyDialog';
+}
+```
+
+&nbsp;  
+
