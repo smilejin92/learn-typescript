@@ -656,3 +656,75 @@ function isLegacyDialog(dialog: LegacyDialog | Dialog): dialog is LegacyDialog {
 
 &nbsp;  
 
+## 6.5. 조건부 타입
+
+* `T extends U ? Foo : Bar` 문법을 사용한다.
+* 일반적인 삼항 연산자처럼 중첩할 수도 있다.
+* 타입 별칭 외에도 타입을 사용할 수 있는 거의 모든 곳에 사용할 수 있다.
+
+```typescript
+type IsString<T> = T extends string ? true : false;
+
+type A = IsString<string>; // true
+type B = IsString<number>; // false
+```
+
+&nbsp;  
+
+### 6.5.1. 분배적 조건부
+
+**조건부 타입을 사용하면 타입스크립트는 유니온 타입을 조건부의 절들로 분배한다.** 즉, 조건부 타입을 가져다가 유니온의 각 요소로 매핑하는 것과 같은 결과다.
+
+| 이 표현식은                           | 다음과 같다                                               |
+| ------------------------------------- | --------------------------------------------------------- |
+| `string extends T ? A : B`            | `string extends T ? A : B`                                |
+| `(string | number) extends T ? A : B` | `(string extends T ? A : B) | (number extends T ? A : B)` |
+
+```typescript
+// 조건부 타입이 아닌 경우
+type ToArray<T> = T[];
+type A = ToArray<number | string>; // (number | string)[]
+```
+
+```typescript
+// 조건부 타입을 사용할 경우
+// 다음 분기문의 두 조건절은 모두 같은 타입 T[]로 해석하므로 조건부는 사실 아무 일도 수행하지 않는다.
+type ToArray<T> = T extends unknown ? T[] : T[];
+
+// 단, 조건부 타입을 사용하면 유니온 타입은 조건부의 절들로 분배된다.
+type A = ToArray<number | string>; // number[] | string[]
+```
+
+&nbsp;  
+
+분배적 조건부의 특징을 사용하면 다양한 공통 연산을 안전하게 표현할 수 있다.
+
+```typescript
+// T에는 존재하지만 U에는 존재하지 않는 타입을 구하는 Without<T, U> 타입
+type Without<T, U> = T extends U ? never : T;
+
+// 조건부 타입에 분배 속성이 없었다면 얻을 수 있는 것은 never 타입 뿐이었을 것이다.
+// T = boolean | number | string
+// U = boolean
+type A = Without<boolean | number | string, boolean>;
+
+// 아래와 같은 순서로 해석된다.
+// 1. 조건을 유니온으로 분배한다.
+type A = Without<boolean, boolean>
+	| Without<number, boolean>
+	| Without<string, boolean>
+
+// 2. Without의 정의를 교체하고 T와 U를 적용한다.
+type A = (boolean extends boolean ? never : boolean)
+	| (number extends boolean ? never : number)
+	| (string extends boolean ? never : string)
+
+// 3. 조건을 평가한다.
+type A = never | number | string;
+
+// 4. 단순화한다.
+type A = number | string;
+```
+
+&nbsp;  
+
