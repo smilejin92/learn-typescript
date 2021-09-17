@@ -728,3 +728,22 @@ type A = number | string;
 
 &nbsp;  
 
+### 6.5.2. infer 키워드
+
+* 조건부 타입은 **조건의 일부를 제네릭 타입으로 선언할 수 있다.**
+* 조건부 타입에서는 `infer` 키워드를 사용하여 제네릭 타입을 인라인으로 선언하는 문법을 제공한다.
+
+```typescript
+// infer 키워드 사용 X
+type ElementType<T> = T extends unknown[] ? T[number] : T;
+type A = ElementType<number[]>; // number
+
+// infer 키워드 사용 O
+// T[number] 타입을 U로 대체할 수 있다.
+// 타입스크립트는 문맥을 살펴, 어떤 T를 전달했느냐를 보고 U의 타입을 추론한다.
+type ElementType2<T> = T extends (infer U)[] ? U : T;
+type B = ElementType<number[]>; // number
+
+```
+
+&nbsp;  
