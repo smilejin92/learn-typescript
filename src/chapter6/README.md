@@ -738,12 +738,72 @@ type A = number | string;
 type ElementType<T> = T extends unknown[] ? T[number] : T;
 type A = ElementType<number[]>; // number
 
-// infer 키워드 사용 O
+// infer 키워드 사용 예제 1
 // T[number] 타입을 U로 대체할 수 있다.
 // 타입스크립트는 문맥을 살펴, 어떤 T를 전달했느냐를 보고 U의 타입을 추론한다.
 type ElementType2<T> = T extends (infer U)[] ? U : T;
 type B = ElementType<number[]>; // number
 
+// infer 키워드 사용 예제 2
+type SecondArgOf<F> = F extends (a: any, b: infer B) => any ? B : never;
+
+type Slice = typeof Array['prototype']['slice'];
+type C = SecondArgOf<Slice>; // number | undefined
+
 ```
 
 &nbsp;  
+
+### 6.5.3. 내장 조건부 타입들
+
+`Exclude<T, U>` - T에는 속하지만 U에는 없는 타입을 구한다.
+
+```typescript
+type A = number | string;
+type B = string;
+type C = Exclude<A, B>; // number
+```
+
+&nbsp;  
+
+`Extract<T, U>` - T의 타입 중 U에 할당할 수 있는 타입을 구한다.
+
+```typescript
+type A = number | string;
+type B = string;
+type C = Extract<A, B>; // string
+```
+
+&nbsp;  
+
+`NonNullable<T>` - T에서 null과 undefined를 제외한 버전을 구한다.
+
+```typescript
+type A = {
+  a?: number | null;
+};
+
+type B = NonNullable<A['a']>; // number
+```
+
+&nbsp;  
+
+`ReturnType<F>` - 함수의 반환 타입을 구한다. 단, 제네릭과 오버로드된 함수에서는 동작하지 않는다.
+
+```typescript
+type F = (a: number) => string;
+type R = ReturnType<F>; // string
+```
+
+&nbsp;  
+
+`InstanceType<C>` - 클래스 생성자의 인스턴스 타입을 구한다.
+
+```typescript
+type A = { new(): B };
+type B = { b: number };
+type I = InstanceType<A>; // { b: number }
+```
+
+&nbsp;  
+
